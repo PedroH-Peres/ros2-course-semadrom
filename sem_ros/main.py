@@ -1,9 +1,9 @@
-"""Versão SEM ROS: tudo em um processo só.
+"""Versão SEM ROS: tudo roda em um programa só.
 
-O loop abaixo faz, a cada 20 ms:
-  1. o cérebro olha o mundo e decide a velocidade (chamada de função);
-  2. a velocidade é entregue ao mundo (chamada de função);
-  3. o mundo avança a física e se redesenha.
+A cada 20 ms acontece o seguinte:
+  1. o cérebro olha o mundo e decide o que fazer (chamada de função)
+  2. a decisão é passada para o mundo (outra chamada de função)
+  3. o mundo faz a física andar um pouquinho e se redesenha
 """
 
 import signal
@@ -30,9 +30,9 @@ def main():
         mundo.estado = cerebro.estado
         mundo.passo(PERIODO_MS / 1000)
         mundo.desenhar()
-        raiz.after(PERIODO_MS, tick)
+        raiz.after(PERIODO_MS, tick)   # agenda o próximo tick
 
-    # Ctrl+C no terminal fecha a janela (sem isso o Tkinter engole o sinal).
+    # Sem isso o Tkinter ignora o Ctrl+C e o terminal fica preso.
     signal.signal(signal.SIGINT, lambda *args: raiz.quit())
 
     raiz.after(PERIODO_MS, tick)

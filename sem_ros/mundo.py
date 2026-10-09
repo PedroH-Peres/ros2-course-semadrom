@@ -1,42 +1,39 @@
-"""Mundo do futebol de robôs: física + desenho (Tkinter).
+"""O mundo do jogo: guarda onde estão o robô e a bola, faz a física e desenha.
 
-Este arquivo é IDÊNTICO nas versões sem_ros e com_ros.
-Ele não sabe nada de ROS: só guarda posições, move as coisas e desenha.
+Este arquivo é igual na versão sem ROS e na com ROS. Ele não sabe o que é ROS.
 
-Convenções (todas em metros e radianos):
-  - O campo tem 9 m x 6 m, com a origem (0, 0) no centro.
-  - x vai de -4.5 a +4.5 e y vai de -3 a +3.
-  - O gol AZUL fica em x = +4.5 e o gol AMARELO em x = -4.5.
-  - theta = 0 significa robô olhando para +x (para o gol azul).
+Unidades: metros, segundos e radianos.
+O centro do campo é o (0, 0). O gol azul fica em x = +4.5 e o amarelo em x = -4.5.
+Quando theta = 0 o robô está olhando para o gol azul.
 """
 
 import math
 import tkinter as tk
 
-# --- Dimensões do campo (RoboCup Humanoid KidSize) ---
+# Tamanho do campo (o da RoboCup Humanoid KidSize)
 COMPRIMENTO = 9.0
 LARGURA = 6.0
 LARGURA_GOL = 2.6
 
-# --- Robô e bola ---
+# Robô e bola
 RAIO_ROBO = 0.20
 RAIO_BOLA = 0.08
 VEL_LINEAR_MAX = 1.5      # m/s
 VEL_ANGULAR_MAX = 3.0     # rad/s
 
-# --- Física da bola ---
-ATRITO_BOLA = 0.6         # desaceleração, em m/s²
+# Bola
+ATRITO_BOLA = 0.6         # quanto ela perde de velocidade por segundo (m/s²)
 VEL_CHUTE = 3.0           # m/s
-ALCANCE_CHUTE = 0.45      # distância máxima do robô à bola para chutar
-ANGULO_CHUTE = math.radians(35)  # a bola tem que estar mais ou menos na frente
+ALCANCE_CHUTE = 0.45      # a bola tem que estar a no máximo essa distância
+ANGULO_CHUTE = math.radians(35)  # e mais ou menos na frente do robô
 
-# --- Desenho ---
+# Desenho
 ESCALA = 100              # pixels por metro
-MARGEM = 50               # pixels em volta do campo
+MARGEM = 50               # espaço em volta do campo, em pixels
 
 
 def normalizar_angulo(a):
-    """Leva um ângulo para o intervalo [-pi, pi]."""
+    """Deixa o ângulo entre -pi e pi (assim 350° vira -10°)."""
     return math.atan2(math.sin(a), math.cos(a))
 
 
@@ -50,46 +47,42 @@ class Mundo:
         self.canvas = tk.Canvas(raiz, width=largura_px, height=altura_px,
                                 bg="#2e7d32", highlightthickness=0)
         self.canvas.pack()
-        # Clicar no campo move a bola para o ponto clicado.
+        # clicou no campo: a bola vai pra lá
         self.canvas.bind("<Button-1>", self._ao_clicar)
 
-        # Estado do robô
+        # robô
         self.robo_x = -2.0
         self.robo_y = 1.0
         self.robo_theta = 0.0
         self.vel_linear = 0.0
         self.vel_angular = 0.0
 
-        # Estado da bola
+        # bola
         self.bola_x = 0.0
         self.bola_y = 0.0
         self.bola_vx = 0.0
         self.bola_vy = 0.0
 
-        # Placar: gols marcados em cada gol
+        # placar: quantos gols foram marcados em cada gol
         self.gols_azul = 0
         self.gols_amarelo = 0
 
-        # Texto mostrado no canto da tela (quem decide escreve aqui)
+        # texto que aparece no canto da tela (quem controla o robô escreve aqui)
         self.estado = "-"
 
         self._desenhar_campo()
         self._criar_objetos()
         self.desenhar()
 
-    # ------------------------------------------------------------------
-    # Comandos
-    # ------------------------------------------------------------------
+    # ----- comandos -----
+
     def aplicar_velocidade(self, linear, angular):
-        """Define a velocidade do robô (linear em m/s, angular em rad/s)."""
+        """Diz ao robô quão rápido andar (m/s) e girar (rad/s)."""
         self.vel_linear = max(-VEL_LINEAR_MAX, min(VEL_LINEAR_MAX, linear))
         self.vel_angular = max(-VEL_ANGULAR_MAX, min(VEL_ANGULAR_MAX, angular))
 
     def chutar(self):
-        """Chuta a bola se ela estiver perto e na frente do robô.
-
-        Devolve True se chutou.
-        """
+        """Chuta a bola se ela estiver perto e na frente. Retorna True se chutou."""
         dx = self.bola_x - self.robo_x
         dy = self.bola_y - self.robo_y
         distancia = math.hypot(dx, dy)
@@ -101,21 +94,20 @@ class Mundo:
         return True
 
     def resetar_bola(self):
-        """Coloca a bola parada no centro do campo."""
+        """Põe a bola parada no meio do campo."""
         self.mover_bola(0.0, 0.0)
 
     def mover_bola(self, x, y):
-        """Coloca a bola parada em (x, y)."""
+        """Põe a bola parada em (x, y)."""
         self.bola_x = max(-COMPRIMENTO / 2, min(COMPRIMENTO / 2, x))
         self.bola_y = max(-LARGURA / 2, min(LARGURA / 2, y))
         self.bola_vx = 0.0
         self.bola_vy = 0.0
 
-    # ------------------------------------------------------------------
-    # Física
-    # ------------------------------------------------------------------
+    # ----- física -----
+
     def passo(self, dt):
-        """Avança a simulação por dt segundos."""
+        """Faz o tempo andar dt segundos."""
         self._mover_robo(dt)
         self._mover_bola(dt)
         self._colisao_robo_bola()
@@ -125,14 +117,14 @@ class Mundo:
             self.robo_theta + self.vel_angular * dt)
         self.robo_x += self.vel_linear * math.cos(self.robo_theta) * dt
         self.robo_y += self.vel_linear * math.sin(self.robo_theta) * dt
-        # O robô não sai do campo.
+        # o robô não sai do campo
         limite_x = COMPRIMENTO / 2 - RAIO_ROBO
         limite_y = LARGURA / 2 - RAIO_ROBO
         self.robo_x = max(-limite_x, min(limite_x, self.robo_x))
         self.robo_y = max(-limite_y, min(limite_y, self.robo_y))
 
     def _mover_bola(self, dt):
-        # Atrito: a bola vai desacelerando até parar.
+        # atrito: a bola vai ficando mais lenta até parar
         velocidade = math.hypot(self.bola_vx, self.bola_vy)
         if velocidade > 0:
             nova = max(0.0, velocidade - ATRITO_BOLA * dt)
@@ -146,12 +138,12 @@ class Mundo:
         meio_x = COMPRIMENTO / 2
         meio_y = LARGURA / 2
 
-        # Paredes laterais (em y): a bola quica.
+        # nas laterais a bola quica
         if abs(self.bola_y) > meio_y:
             self.bola_y = math.copysign(meio_y, self.bola_y)
             self.bola_vy = -self.bola_vy
 
-        # Linhas de fundo (em x): ou é gol, ou a bola quica.
+        # na linha de fundo: se passou pelo gol é gol, senão quica
         if abs(self.bola_x) > meio_x:
             if abs(self.bola_y) < LARGURA_GOL / 2:
                 if self.bola_x > 0:
@@ -164,18 +156,19 @@ class Mundo:
                 self.bola_vx = -self.bola_vx
 
     def _colisao_robo_bola(self):
-        """Se o robô encosta na bola, ele empurra a bola."""
+        """Se o robô encosta na bola, ele empurra."""
         dx = self.bola_x - self.robo_x
         dy = self.bola_y - self.robo_y
         distancia = math.hypot(dx, dy)
         minimo = RAIO_ROBO + RAIO_BOLA
         if distancia >= minimo or distancia == 0:
             return
+        # (nx, ny) aponta do robô para a bola
         nx, ny = dx / distancia, dy / distancia
-        # Tira a bola de dentro do robô.
+        # tira a bola de dentro do robô
         self.bola_x = self.robo_x + nx * minimo
         self.bola_y = self.robo_y + ny * minimo
-        # A bola ganha a velocidade do robô na direção do empurrão.
+        # a bola ganha a velocidade do robô naquela direção
         vx = self.vel_linear * math.cos(self.robo_theta)
         vy = self.vel_linear * math.sin(self.robo_theta)
         empurrao = vx * nx + vy * ny
@@ -183,11 +176,10 @@ class Mundo:
             self.bola_vx = nx * empurrao * 1.3
             self.bola_vy = ny * empurrao * 1.3
 
-    # ------------------------------------------------------------------
-    # Desenho
-    # ------------------------------------------------------------------
+    # ----- desenho -----
+
     def _px(self, x, y):
-        """Converte metros (origem no centro, y para cima) em pixels."""
+        """Converte metros em pixels (no Tkinter o y cresce para baixo)."""
         return (MARGEM + (x + COMPRIMENTO / 2) * ESCALA,
                 MARGEM + (LARGURA / 2 - y) * ESCALA)
 
@@ -202,14 +194,14 @@ class Mundo:
         branco = "white"
         self._retangulo(-meio_x, -meio_y, meio_x, meio_y,
                         outline=branco, width=3)
-        # Linha do meio e círculo central
+        # linha do meio e círculo central
         a = self._px(0, -meio_y)
         b = self._px(0, meio_y)
         self.canvas.create_line(*a, *b, fill=branco, width=3)
         c1 = self._px(-0.75, 0.75)
         c2 = self._px(0.75, -0.75)
         self.canvas.create_oval(*c1, *c2, outline=branco, width=3)
-        # Gols: amarelo à esquerda, azul à direita (ficam fora do campo)
+        # gols (ficam um pouco para fora do campo)
         meio_gol = LARGURA_GOL / 2
         profundidade = 0.4
         self._retangulo(-meio_x - profundidade, -meio_gol, -meio_x, meio_gol,
@@ -239,9 +231,10 @@ class Mundo:
         self.canvas.coords(id_, cx - r, cy - r, cx + r, cy + r)
 
     def desenhar(self):
-        """Atualiza na tela as posições de robô e bola, placar e estado."""
+        """Redesenha o robô, a bola, o placar e o estado."""
         self._circulo(self.id_robo, self.robo_x, self.robo_y, RAIO_ROBO)
         self._circulo(self.id_bola, self.bola_x, self.bola_y, RAIO_BOLA)
+        # o risquinho branco mostra para onde o robô está olhando
         x0, y0 = self._px(self.robo_x, self.robo_y)
         x1, y1 = self._px(
             self.robo_x + 1.6 * RAIO_ROBO * math.cos(self.robo_theta),
