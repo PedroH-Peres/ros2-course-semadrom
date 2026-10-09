@@ -9,7 +9,7 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 
-# Claude Code
+# Pastas e arquivos de assistentes de código
 .claude/
 CLAUDE.md
 
