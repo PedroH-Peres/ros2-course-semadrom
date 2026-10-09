@@ -237,3 +237,6 @@ ros2 run futebol_robo cerebro        # terminal 2 (da etapa 02 em diante)
 ## Licença
 
 MIT. Veja o arquivo [LICENSE](LICENSE).
+
+## Contato
+github.com/PedroH-Peres
