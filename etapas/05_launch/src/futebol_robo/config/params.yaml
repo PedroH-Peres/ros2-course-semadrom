@@ -1,8 +1,9 @@
 # Parâmetros do nó cerebro.
-# Mude aqui e rode o launch de novo (ou use `ros2 param set /cerebro ...`).
+# O nome na primeira linha tem que ser igual ao nome do nó.
+# Para mudar com o programa rodando: ros2 param set /cerebro gol_alvo azul
 cerebro:
   ros__parameters:
     velocidade_maxima: 1.0   # m/s
-    ganho_angular: 2.0       # quanto maior, mais rápido o robô gira
-    distancia_atras: 0.5     # m, distância da bola de onde o robô chuta
-    gol_alvo: amarelo        # "amarelo" ou "azul"
+    ganho_angular: 2.0       # quanto maior, mais rápido ele gira para corrigir a direção
+    distancia_atras: 0.5     # metros atrás da bola de onde ele chuta
+    gol_alvo: amarelo        # amarelo ou azul
