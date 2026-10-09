@@ -1,4 +1,4 @@
-"""Sobe o simulador e o cérebro juntos, com os parâmetros do params.yaml."""
+"""Sobe o simulador e o cérebro juntos, com um comando só."""
 
 import os
 
@@ -11,6 +11,7 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
+    # procura o params.yaml dentro do pacote instalado
     params = os.path.join(
         get_package_share_directory('futebol_robo'), 'config', 'params.yaml')
 
@@ -28,7 +29,7 @@ def generate_launch_description():
         parameters=[params],
     )
 
-    # Se a janela do simulador for fechada, encerra o resto também.
+    # se fecharem a janela do simulador, derruba o cérebro também
     fechar_tudo = RegisterEventHandler(
         OnProcessExit(
             target_action=simulador,
