@@ -1,5 +1,7 @@
 # Minicurso de ROS 2: futebol de robôs 2D
 
+> **Projeto em andamento.** O material ainda está sendo construído e pode ter falhas, erros de texto ou partes que não funcionam no seu computador. Se achar algo errado, qualquer correção é bem-vinda: abra uma issue ou mande um pull request.
+
 Este projeto é o material de um minicurso de ROS 2 de 1h45. A gente começa com um jogo de futebol de robôs em Python puro e, ao vivo, transforma o jogo em um sistema ROS 2 com dois programas conversando entre si. Tudo roda no seu computador, sem robô de verdade e sem hardware.
 
 Você não precisa saber ROS para começar. Se ainda não sabe o que ele é, leia o [EXPLICACAO.md](EXPLICACAO.md), que explica os conceitos usando este mesmo projeto.
